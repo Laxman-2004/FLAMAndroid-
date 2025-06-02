@@ -1,0 +1,86 @@
+#include<unordered_map>
+
+class LRUCache{
+private:
+    struct Entry{
+       int key, val;
+       Entry* prev;
+       Entry* next;
+       Entry(int k, int v) : key(k), val(v), prev(nullptr), nect(nullptr) {}
+}
+
+int cap;
+std::unordered_map<int,Entry*>mp; // Maps key to node
+Entry* front;  // Sentinel node at front (most recently used)
+ENtry rear;   // Sentinel node at back (least recently used)
+
+ // Detach a node from its current position
+    void detach(Entry* node) {
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+    }
+
+    // Place a node right after the front sentinel
+    void attach(Entry* node) {
+        node->next = front->next;
+        node->prev = front;
+        front->next->prev = node;
+        front->next = node;
+    }
+
+    // Removes the least recently used node (before rear sentinel)
+    Entry* evict() {
+        Entry* lru = rear->prev;
+        detach(lru);
+        return lru;
+    }
+
+public:
+    // Constructor initializes capacity and dummy head/tail
+    LRUCache(int capacity) : cap(capacity) {
+        front = new Entry(0, 0);
+        rear = new Entry(0, 0);
+        front->next = rear;
+        rear->prev = front;
+    }
+
+    // Destructor cleans up all nodes
+    ~LRUCache() {
+        Entry* cur = front;
+        while (cur) {
+            Entry* nxt = cur->next;
+            delete cur;
+            cur = nxt;
+        }
+    }
+
+    // Retrieve value if present, otherwise return -1
+    int get(int key) {
+        if (mp.find(key) == mp.end())
+            return -1;
+        Entry* node = mp[key];
+        detach(node);
+        attach(node);
+        return node->val;
+    }
+
+    // Insert or update value and manage LRU eviction if needed
+    void put(int key, int value) {
+        if (mp.find(key) != mp.end()) {
+            Entry* node = mp[key];
+            node->val = value;
+            detach(node);
+            attach(node);
+        } else {
+            Entry* newEntry = new Entry(key, value);
+            mp[key] = newEntry;
+            attach(newEntry);
+
+            if (mp.size() > cap) {
+                Entry* expired = evict();
+                mp.erase(expired->key);
+                delete expired;
+            }
+        }
+    }
+};
