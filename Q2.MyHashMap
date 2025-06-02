@@ -1,0 +1,100 @@
+#include <vector>
+
+class MyHashMap {
+private:
+    // Choose a prime number as size for better distribution of keys
+    static const int SIZE = 10007;
+
+    // Definition for each bucket's node
+    struct Node {
+        int key;
+        int value;
+        Node* next;
+        Node(int k, int v) : key(k), value(v), next(nullptr) {}
+    };
+
+    // Vector of pointers for the hash table
+    std::vector<Node*> table;
+
+    // Simple hash function
+    int hash(int key) const {
+        return key % SIZE;
+    }
+
+public:
+    // Constructor: Initializes empty table
+    MyHashMap() {
+        table.resize(SIZE, nullptr);
+    }
+
+    // Insert a new key-value or update if key already exists
+    void put(int key, int value) {
+        int idx = hash(key);
+        Node* node = table[idx];
+        Node* prev = nullptr;
+
+        while (node) {
+            if (node->key == key) {
+                node->value = value; // Update value
+                return;
+            }
+            prev = node;
+            node = node->next;
+        }
+
+        Node* newNode = new Node(key, value);
+        if (prev) {
+            prev->next = newNode; // Append to chain
+        } else {
+            table[idx] = newNode; // First element at index
+        }
+    }
+
+    // Retrieve value for a key, or -1 if not found
+    int get(int key) {
+        int idx = hash(key);
+        Node* node = table[idx];
+
+        while (node) {
+            if (node->key == key) {
+                return node->value;
+            }
+            node = node->next;
+        }
+
+        return -1;
+    }
+
+    // Delete the key and its value
+    void remove(int key) {
+        int idx = hash(key);
+        Node* node = table[idx];
+        Node* prev = nullptr;
+
+        while (node) {
+            if (node->key == key) {
+                if (prev) {
+                    prev->next = node->next;
+                } else {
+                    table[idx] = node->next;
+                }
+                delete node;
+                return;
+            }
+            prev = node;
+            node = node->next;
+        }
+    }
+
+    // Destructor: free all memory
+    ~MyHashMap() {
+        for (int i = 0; i < SIZE; ++i) {
+            Node* node = table[i];
+            while (node) {
+                Node* nextNode = node->next;
+                delete node;
+                node = nextNode;
+            }
+        }
+    }
+};
